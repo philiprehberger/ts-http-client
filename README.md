@@ -17,7 +17,6 @@ import { createClient } from '@philiprehberger/http-client';
 
 const api = createClient({
   baseURL: 'https://api.example.com',
-  headers: { Authorization: `Bearer ${token}` },
   timeout: 5000,
 });
 
@@ -37,6 +36,21 @@ const users = await api.get<User[]>('/users', {
 // GET /users?page=2&limit=10&active=true
 ```
 
+### Auth
+
+```ts
+const api = createClient({
+  baseURL: 'https://api.example.com',
+  auth: { type: 'bearer', token: 'my-token' },
+});
+
+// Or basic auth:
+const api = createClient({
+  baseURL: 'https://api.example.com',
+  auth: { type: 'basic', username: 'user', password: 'pass' },
+});
+```
+
 ### Retry
 
 ```ts
@@ -44,8 +58,11 @@ const api = createClient({
   baseURL: 'https://api.example.com',
   retry: {
     maxAttempts: 3,
-    retryOn: [500, 502, 503],  // or a function: (status) => status >= 500
-    backoff: 1000,             // ms, multiplied by attempt number
+    retryOn: [500, 502, 503],
+    backoff: 1000,
+    backoffStrategy: 'exponential', // default, or 'linear'
+    jitter: true,                   // add randomized variation
+    maxBackoff: 30000,              // cap maximum wait
   },
 });
 ```
@@ -125,6 +142,7 @@ Returns an HTTP client with the following methods:
 | `headers` | `Record<string, string>` | Default headers for all requests. |
 | `timeout` | `number` | Default timeout in ms. |
 | `retry` | `RetryConfig` | Retry configuration. |
+| `auth` | `AuthConfig` | Auth configuration (bearer or basic). |
 
 ### `RetryConfig`
 
@@ -132,7 +150,10 @@ Returns an HTTP client with the following methods:
 |----------|------|---------|-------------|
 | `maxAttempts` | `number` | `1` | Total attempts (1 = no retry). |
 | `retryOn` | `number[] \| (status) => boolean` | None | HTTP status codes to retry on. |
-| `backoff` | `number` | `1000` | Base backoff in ms, multiplied by attempt number. |
+| `backoff` | `number` | `1000` | Base backoff in ms. |
+| `backoffStrategy` | `'linear' \| 'exponential'` | `'exponential'` | Backoff growth strategy. |
+| `jitter` | `boolean` | `false` | Add random variation to backoff. |
+| `maxBackoff` | `number` | `30000` | Maximum backoff cap in ms. |
 
 ### `RequestOptions`
 

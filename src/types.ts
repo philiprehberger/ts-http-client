@@ -1,14 +1,27 @@
+export type AuthConfig = {
+  type: 'bearer';
+  token: string;
+} | {
+  type: 'basic';
+  username: string;
+  password: string;
+}
+
 export interface ClientOptions {
   baseURL?: string;
   headers?: Record<string, string>;
   timeout?: number;
   retry?: RetryConfig;
+  auth?: AuthConfig;
 }
 
 export interface RetryConfig {
   maxAttempts?: number;
   retryOn?: number[] | ((status: number) => boolean);
   backoff?: number;
+  backoffStrategy?: 'linear' | 'exponential';
+  jitter?: boolean;
+  maxBackoff?: number;
 }
 
 export interface RequestOptions {

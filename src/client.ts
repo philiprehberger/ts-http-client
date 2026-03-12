@@ -28,8 +28,21 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function computeBackoff(attempt: number, backoff: number, strategy: 'linear' | 'exponential', jitter: boolean, maxBackoff: number): number {
+  let delay: number;
+  if (strategy === 'exponential') {
+    delay = backoff * Math.pow(2, attempt - 1);
+  } else {
+    delay = backoff * attempt;
+  }
+  if (jitter) {
+    delay = delay * (0.5 + Math.random() * 0.5);
+  }
+  return Math.min(delay, maxBackoff);
+}
+
 export function createClient(options: ClientOptions = {}) {
-  const { baseURL, headers: defaultHeaders = {}, timeout: defaultTimeout, retry: retryConfig } = options;
+  const { baseURL, headers: defaultHeaders = {}, timeout: defaultTimeout, retry: retryConfig, auth } = options;
 
   const requestInterceptors: RequestInterceptor[] = [];
   const responseInterceptors: ResponseInterceptor[] = [];
@@ -45,6 +58,15 @@ export function createClient(options: ClientOptions = {}) {
   async function request<T>(method: string, path: string, opts?: RequestOptions): Promise<T> {
     const url = buildURL(baseURL, path, opts?.params);
     const headers = new Headers({ ...defaultHeaders, ...opts?.headers });
+
+    if (auth) {
+      if (auth.type === 'bearer') {
+        headers.set('Authorization', `Bearer ${auth.token}`);
+      } else if (auth.type === 'basic') {
+        const encoded = btoa(`${auth.username}:${auth.password}`);
+        headers.set('Authorization', `Basic ${encoded}`);
+      }
+    }
 
     let body: BodyInit | undefined;
     if (opts?.body !== undefined) {
@@ -66,11 +88,15 @@ export function createClient(options: ClientOptions = {}) {
 
     const maxAttempts = retryConfig?.maxAttempts ?? 1;
     const backoff = retryConfig?.backoff ?? 1000;
+    const backoffStrategy = retryConfig?.backoffStrategy ?? 'exponential';
+    const jitter = retryConfig?.jitter ?? false;
+    const maxBackoff = retryConfig?.maxBackoff ?? 30000;
 
     let lastError: unknown;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       const start = Date.now();
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
       try {
         const timeout = opts?.timeout ?? defaultTimeout;
@@ -80,7 +106,7 @@ export function createClient(options: ClientOptions = {}) {
           signal = AbortSignal.timeout(timeout);
         } else if (timeout && signal) {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(new Error('Request timeout')), timeout);
+          timeoutId = setTimeout(() => controller.abort(new Error('Request timeout')), timeout);
           signal.addEventListener('abort', () => {
             clearTimeout(timeoutId);
             controller.abort(signal!.reason);
@@ -106,15 +132,16 @@ export function createClient(options: ClientOptions = {}) {
             : false;
 
           if (shouldRetry && attempt < maxAttempts) {
-            await sleep(backoff * attempt);
+            await sleep(computeBackoff(attempt, backoff, backoffStrategy, jitter, maxBackoff));
             continue;
           }
 
           let errorBody: unknown;
+          const errorText = await response.text().catch(() => null);
           try {
-            errorBody = await response.json();
+            errorBody = errorText ? JSON.parse(errorText) : null;
           } catch {
-            errorBody = await response.text().catch(() => null);
+            errorBody = errorText;
           }
 
           throw new HttpError(response.status, response.statusText, req.url, errorBody);
@@ -146,10 +173,14 @@ export function createClient(options: ClientOptions = {}) {
         lastError = error;
         if (error instanceof HttpError) throw error;
         if (attempt < maxAttempts) {
-          await sleep(backoff * attempt);
+          await sleep(computeBackoff(attempt, backoff, backoffStrategy, jitter, maxBackoff));
           continue;
         }
         throw error;
+      } finally {
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
       }
     }
 

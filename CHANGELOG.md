@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Add auth helper (bearer and basic authentication)
+- Add exponential backoff strategy with jitter and maxBackoff cap
+- Fix timeout cleanup leak when fetch completes before timeout
+- Fix error body parsing for non-JSON responses
+- Expand test suite (24 tests)
+
 ## 0.2.3
 
 - Fix npm package name references in README
