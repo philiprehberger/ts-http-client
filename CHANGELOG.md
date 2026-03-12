@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Update repository URLs to new ts-prefixed GitHub repo
+
 ## 0.2.0
 
 - Add test suite (5 tests covering client creation, HttpError, interceptors)

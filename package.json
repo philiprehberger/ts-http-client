@@ -1,6 +1,6 @@
 {
   "name": "@philiprehberger/ts-http-client",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Type-safe fetch wrapper with interceptors, retries, and base URL support",
   "type": "module",
   "main": "./dist/index.cjs",
