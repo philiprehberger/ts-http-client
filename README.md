@@ -1,6 +1,6 @@
 # @philiprehberger/http-client
 
-[![CI](https://github.com/philiprehberger/http-client/actions/workflows/publish.yml/badge.svg)](https://github.com/philiprehberger/http-client/actions/workflows/publish.yml)
+[![CI](https://github.com/philiprehberger/http-client/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/http-client/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@philiprehberger/http-client.svg)](https://www.npmjs.com/package/@philiprehberger/http-client)
 [![License](https://img.shields.io/github/license/philiprehberger/http-client)](LICENSE)
 
@@ -134,7 +134,7 @@ try {
 }
 ```
 
-## API Reference
+## API
 
 ### `createClient(options?: ClientOptions)`
 
