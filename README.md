@@ -1,8 +1,8 @@
 # @philiprehberger/http-client
 
-[![CI](https://github.com/philiprehberger/http-client/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/http-client/actions/workflows/ci.yml)
+[![CI](https://github.com/philiprehberger/ts-http-client/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/ts-http-client/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@philiprehberger/http-client.svg)](https://www.npmjs.com/package/@philiprehberger/http-client)
-[![Last updated](https://img.shields.io/github/last-commit/philiprehberger/http-client)](https://github.com/philiprehberger/http-client/commits/main)
+[![Last updated](https://img.shields.io/github/last-commit/philiprehberger/ts-http-client)](https://github.com/philiprehberger/ts-http-client/commits/main)
 
 Type-safe fetch wrapper with interceptors, retries, and base URL support
 
@@ -205,11 +205,11 @@ npm test
 
 If you find this project useful:
 
-⭐ [Star the repo](https://github.com/philiprehberger/http-client)
+⭐ [Star the repo](https://github.com/philiprehberger/ts-http-client)
 
-🐛 [Report issues](https://github.com/philiprehberger/http-client/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+🐛 [Report issues](https://github.com/philiprehberger/ts-http-client/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
 
-💡 [Suggest features](https://github.com/philiprehberger/http-client/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+💡 [Suggest features](https://github.com/philiprehberger/ts-http-client/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 
 ❤️ [Sponsor development](https://github.com/sponsors/philiprehberger)
 
