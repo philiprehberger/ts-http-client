@@ -4,6 +4,8 @@
 [![npm version](https://img.shields.io/npm/v/@philiprehberger/http-client.svg)](https://www.npmjs.com/package/@philiprehberger/http-client)
 [![Last updated](https://img.shields.io/github/last-commit/philiprehberger/ts-http-client)](https://github.com/philiprehberger/ts-http-client/commits/main)
 
+![@philiprehberger/http-client](https://raw.githubusercontent.com/philiprehberger/ts-http-client/main/package-card.webp)
+
 Type-safe fetch wrapper with interceptors, retries, and base URL support
 
 ## Installation
@@ -117,6 +119,27 @@ await api.get('/data', { signal: controller.signal });
 controller.abort();
 ```
 
+### Derived Clients
+
+Use `defaults()` to create a new client by merging overrides on top of the current options. Useful for deriving an authed client from a base client.
+
+```ts
+const api = createClient({
+  baseURL: 'https://api.example.com',
+  headers: { 'X-App': 'web' },
+});
+
+const authed = api.defaults({
+  headers: { Authorization: 'Bearer my-token' },
+});
+
+// authed has both X-App and Authorization headers.
+// The original `api` is unchanged.
+await authed.get('/me');
+```
+
+`headers` are object-merged (per-key); all other options are shallow-replaced. Interceptors registered via `onRequest` / `onResponse` are **not** inherited — register them explicitly on the derived client.
+
 ### Error Handling
 
 ```ts
@@ -151,6 +174,7 @@ Returns an HTTP client with the following methods:
 | `options` | `<T>(path, opts?) => Promise<T>` | OPTIONS request. |
 | `onRequest` | `(interceptor) => void` | Add a request interceptor. |
 | `onResponse` | `(interceptor) => void` | Add a response interceptor. |
+| `defaults` | `(overrides: Partial<ClientOptions>) => HttpClient` | Returns a new client with options shallow-merged on top of current options (headers are object-merged). Interceptors are not inherited. |
 
 ### `ClientOptions`
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Add `client.defaults(overrides)` to derive a new client with merged options (headers are object-merged)
+
 ## 0.4.6
 
 - Fix README GitHub URLs to use correct repo name (ts-http-client)

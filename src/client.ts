@@ -42,6 +42,7 @@ function computeBackoff(attempt: number, backoff: number, strategy: 'linear' | '
 }
 
 export function createClient(options: ClientOptions = {}) {
+  const currentOptions = options;
   const { baseURL, headers: defaultHeaders = {}, timeout: defaultTimeout, retry: retryConfig, auth } = options;
 
   const requestInterceptors: RequestInterceptor[] = [];
@@ -211,6 +212,19 @@ export function createClient(options: ClientOptions = {}) {
     throw lastError;
   }
 
+  function defaults(overrides: Partial<ClientOptions>): ReturnType<typeof createClient> {
+    const mergedHeaders = {
+      ...(currentOptions.headers ?? {}),
+      ...(overrides.headers ?? {}),
+    };
+    const merged: ClientOptions = {
+      ...currentOptions,
+      ...overrides,
+      headers: mergedHeaders,
+    };
+    return createClient(merged);
+  }
+
   return {
     get: <T>(path: string, opts?: RequestOptions) => request<T>('GET', path, opts),
     post: <T>(path: string, opts?: RequestOptions) => request<T>('POST', path, opts),
@@ -221,5 +235,6 @@ export function createClient(options: ClientOptions = {}) {
     options: <T>(path: string, opts?: RequestOptions) => request<T>('OPTIONS', path, opts),
     onRequest,
     onResponse,
+    defaults,
   };
 }

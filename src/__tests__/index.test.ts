@@ -15,6 +15,97 @@ describe('createClient', () => {
     assert.equal(typeof client.options, 'function');
     assert.equal(typeof client.onRequest, 'function');
     assert.equal(typeof client.onResponse, 'function');
+    assert.equal(typeof client.defaults, 'function');
+  });
+});
+
+describe('client.defaults', () => {
+  let originalFetch;
+  let capturedUrl;
+  let capturedHeaders;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url, opts) => {
+      capturedUrl = url;
+      capturedHeaders = opts.headers;
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    };
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('returns a new client with merged baseURL', async () => {
+    const parent = createClient({ baseURL: 'https://api.test' });
+    const child = parent.defaults({ baseURL: 'https://other.test' });
+
+    assert.notEqual(parent, child);
+    assert.equal(typeof child.get, 'function');
+
+    await child.get('/data');
+    assert.ok(String(capturedUrl).startsWith('https://other.test/'));
+  });
+
+  it('merges headers with existing headers preserved', async () => {
+    const parent = createClient({
+      baseURL: 'https://api.test',
+      headers: { 'X-Base': 'base-value' },
+    });
+    const child = parent.defaults({
+      headers: { Authorization: 'Bearer x' },
+    });
+
+    await child.get('/data');
+    assert.equal(capturedHeaders.get('X-Base'), 'base-value');
+    assert.equal(capturedHeaders.get('Authorization'), 'Bearer x');
+  });
+
+  it('child header values override parent for same key', async () => {
+    const parent = createClient({
+      baseURL: 'https://api.test',
+      headers: { 'X-Env': 'prod' },
+    });
+    const child = parent.defaults({
+      headers: { 'X-Env': 'staging' },
+    });
+
+    await child.get('/data');
+    assert.equal(capturedHeaders.get('X-Env'), 'staging');
+  });
+
+  it('does not affect the parent client', async () => {
+    const parent = createClient({
+      baseURL: 'https://api.test',
+      headers: { 'X-Base': 'base-value' },
+    });
+    parent.defaults({
+      baseURL: 'https://other.test',
+      headers: { Authorization: 'Bearer x' },
+    });
+
+    await parent.get('/data');
+    assert.ok(String(capturedUrl).startsWith('https://api.test/'));
+    assert.equal(capturedHeaders.get('X-Base'), 'base-value');
+    assert.equal(capturedHeaders.get('Authorization'), null);
+  });
+
+  it('parent interceptors are not inherited by derived clients', async () => {
+    const parent = createClient({ baseURL: 'https://api.test' });
+    let interceptorCalls = 0;
+    parent.onRequest((req) => {
+      interceptorCalls++;
+      return req;
+    });
+
+    const child = parent.defaults({ headers: { Authorization: 'Bearer x' } });
+    await child.get('/data');
+
+    assert.equal(interceptorCalls, 0);
   });
 });
 
